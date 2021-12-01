@@ -87,7 +87,7 @@ def clean_args(args):
     return args
 
 def get_data_loaders(train_dataset, val_dataset):
-    tf_train = JointTransform2D(crop=None, p_flip=0, p_random_affine=0, color_jitter_params=None, long_mask=True)
+    tf_train = JointTransform2D(crop=None, p_flip=0.5, p_random_affine=0.25, long_mask=True)
     tf_val = JointTransform2D(crop=None, p_flip=0, color_jitter_params=None, long_mask=True)
     train_dataset = ImageToImage2D(train_dataset, tf_train)
     val_dataset = ImageToImage2D(val_dataset, tf_val)
@@ -129,7 +129,7 @@ def train(model, epoch_range, trainloader, valloader, criterion, optimizer, metr
             optimizer.step()
             epoch_running_loss += loss.item()
         return epoch_running_loss/(batch_idx+1)
-    def validate():
+    def validate(metric_list):
         tf1 = 0
         tmiou = 0
         tpa = 0
@@ -143,6 +143,8 @@ def train(model, epoch_range, trainloader, valloader, criterion, optimizer, metr
             X_batch = Variable(X_batch.cuda())
             y_batch = Variable(y_batch.cuda())
             y_out = model(X_batch)
+            
+            metric_list((y_out >= 0.5) * 1, y_batch)
             tmp2 = y_batch.detach().cpu().numpy()
             tmp = y_out.detach().cpu().numpy()
             tmp3 = np.copy(tmp)
@@ -177,6 +179,7 @@ def train(model, epoch_range, trainloader, valloader, criterion, optimizer, metr
             fulldir = args.direc+"/{}/".format(epoch)
             torch.save(model.state_dict(), fulldir+"kiunet.pth")
             torch.save(model.state_dict(), args.direc+"model.pth")
+        print('Validation Metrics: {}'.format(repr(metric_list.get_results(normalize=batch_idx))))
         return tf1
 
         
@@ -187,11 +190,11 @@ def train(model, epoch_range, trainloader, valloader, criterion, optimizer, metr
             .format(epoch, max(epoch_range), epoch_loss))
         
         # =================validation=============
-        # metric_list.reset()
+        metric_list.reset()
         
         if (epoch % args.save_freq) ==0:
             
-            tf1 = validate()    
+            tf1 = validate(metric_list)    
             if bestdice<tf1:
                 bestdice = tf1 
                 print("bestdice = {}".format(bestdice/count))  
@@ -201,7 +204,6 @@ def train(model, epoch_range, trainloader, valloader, criterion, optimizer, metr
 if __name__ == "__main__":
     args = clean_args(get_parser().parse_args())
     model = kiunet(size = args.size)
-    # model.apply(weight_init)
     model = nn.DataParallel(model).cuda()
     if args.weights:
         model.load_state_dict(torch.load(args.weights))

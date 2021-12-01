@@ -31,7 +31,9 @@ def classwise_iou(output, gt):
     intersection = output*gt
     union = output + gt - intersection
     classwise_iou = (intersection.sum(dim=dims).float() + EPSILON) / (union.sum(dim=dims) + EPSILON)
-
+    if classwise_iou.max() > 1:
+        print(1)
+        assert 0
     return classwise_iou
 
 

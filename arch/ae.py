@@ -300,7 +300,7 @@ class kiunet(nn.Module):
         out = F.relu(self.final(out))  #1*1 conv
         
 
-        # out = self.soft(out)
+        #out = self.soft(out)
         
         return out
 

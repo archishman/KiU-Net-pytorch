@@ -277,4 +277,4 @@ class MetricList:
         if not normalize:
             return self.results
         else:
-            return {key: value/normalize for key, value in self.results.items()}
+            return {key: value.detach().cpu().numpy()/normalize for key, value in self.results.items()}

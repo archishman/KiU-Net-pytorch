@@ -1,2 +1,1 @@
-python train.py -w ./RITE/teacher_mid.pth --train_dataset ./RITE/train/ --val_dataset ./RITE/validation/ --epoch 2000 --start-epoch 1501 --save_freq 10 --size 32
-
+nohup python train.py --train_dataset ./RITE/train/ --val_dataset ./RITE/validation/ --epoch 200 --save_freq 10 --size 4 &> student_self_taught.log &
