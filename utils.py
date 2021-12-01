@@ -73,9 +73,8 @@ class JointTransform2D:
 
         # random crop
         if self.crop:
-            i, j, h, w = T.RandomCrop.get_params(image, self.crop)
+            i, j, h, w = T.RandomCrop(self.crop, ).get_params(image, self.crop)
             image, mask = F.crop(image, i, j, h, w), F.crop(mask, i, j, h, w)
-
         if np.random.rand() < self.p_flip:
             image, mask = F.hflip(image), F.hflip(mask)
 
@@ -85,7 +84,7 @@ class JointTransform2D:
 
         # random affine transform
         if np.random.rand() < self.p_random_affine:
-            affine_params = T.RandomAffine(180).get_params((-90, 90), (1, 1), (2, 2), (-45, 45), self.crop)
+            affine_params = T.RandomAffine(180).get_params((-90, 90), (1, 1), (2, 2), (-45, 45), self.crop or image.size)
             image, mask = F.affine(image, *affine_params), F.affine(mask, *affine_params)
 
         # transforming to tensor
@@ -94,6 +93,7 @@ class JointTransform2D:
             mask = F.to_tensor(mask)
         else:
             mask = to_long_tensor(mask)
+
 
         return image, mask
 
